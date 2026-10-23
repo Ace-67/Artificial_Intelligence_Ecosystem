@@ -66,8 +66,44 @@ def apply_spaghetti_filter(image_path, output_path="spaghetti_monster.png", nood
         print(f"Error processing image: {e}")
 
 
+def apply_cyberpunk_filter(image_path, output_path="cyberpunk_neon.jpg"):
+    """Apply a cyberpunk-inspired neon effect to an image."""
+    try:
+        from PIL import ImageEnhance, ImageOps
+
+        img = Image.open(image_path).convert("RGB")
+        img = img.resize((512, 512))
+
+        # Increase contrast and color intensity.
+        img = ImageEnhance.Contrast(img).enhance(1.5)
+        img = ImageEnhance.Color(img).enhance(1.8)
+
+        # Simplify colors for a stylized appearance.
+        neon = ImageOps.posterize(img, bits=3)
+
+        # Find edges and turn them into cyan highlights.
+        edges = img.filter(ImageFilter.FIND_EDGES)
+        edges = ImageOps.grayscale(edges)
+        edges = ImageOps.invert(edges)
+        edges = ImageEnhance.Contrast(edges).enhance(2.0)
+
+        cyan_edges = ImageOps.colorize(
+            edges,
+            black="#080018",
+            white="#00ffff"
+        ).convert("RGB")
+
+        result = Image.blend(neon, cyan_edges, 0.35)
+        result.save(output_path)
+
+        print(f"Cyberpunk image saved as '{output_path}'.")
+
+    except Exception as e:
+        print(f"Error processing image: {e}")
+
+
 if __name__ == "__main__":
-    print("Image Processor (type 'exit' to quit)\nAvailable filters: blur, spaghetti")
+    print("Image Processor (type 'exit' to quit)\nAvailable filters: blur, spaghetti, cyberpunk")
     while True:
         image_path = input("Enter image filename (or 'exit' to quit): ").strip()
         if image_path.lower() == 'exit':
@@ -78,7 +114,9 @@ if __name__ == "__main__":
             continue
 
         # choose filter
-        choice = input("Choose filter ('blur' or 'spaghetti'): ").strip().lower()
+        choice = input(
+            "Choose filter ('blur', 'spaghetti', or 'cyberpunk'): "
+        ).strip().lower()
         base, ext = os.path.splitext(image_path)
 
         if choice == 'blur':
@@ -87,5 +125,12 @@ if __name__ == "__main__":
         elif choice == 'spaghetti':
             output_file = f"{base}_spaghetti{ext}"
             apply_spaghetti_filter(image_path, output_file)
+        elif choice == 'cyberpunk':
+            output_file = f"{base}_cyberpunk.jpg"
+            apply_cyberpunk_filter(image_path, output_file)
+
         else:
-            print("Unknown filter choice. Please select 'blur' or 'spaghetti'.")
+            print(
+                "Unknown filter choice. Please select "
+                "'blur', 'spaghetti', or 'cyberpunk'."
+            )
